@@ -1,0 +1,131 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Data;
+
+namespace employeetable
+{
+    public partial class WebForm1 : System.Web.UI.Page
+
+    {
+        SqlConnection con = new SqlConnection(@"Data Source=SAIF; Initial Catalog=shivam; Integrated Security=True");
+        SqlCommand cmd;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+                FillGrid();
+        }
+
+        protected void btnsubmit_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (txtempdes.Text == null || txtempName.Text == null || // add more coloum
+                txtempdes.Text.ToString().Trim().Equals("") || txtempName.Text.ToString().Trim().Equals(""))
+                    lblInfo.Text = "Please enter all fields";
+                else
+                {
+
+                    cmd = new SqlCommand();
+                    cmd.Connection = con;
+                    con.Open();
+                    cmd.CommandText = "sp_EMP";
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@EMP_Name", txtempName.Text.ToString());
+                    cmd.Parameters.AddWithValue("@EMP_Desc", txtempdes.Text.ToString());// add more parameter for coloum
+                    cmd.ExecuteNonQuery();
+
+                    SqlDataAdapter adapter = new SqlDataAdapter(new SqlCommand("Select EMP_Name,EMP_Desc from EMP_DB", con));
+                    DataTable dt = new DataTable();
+                    adapter.Fill(dt);
+                    proDataGrid.DataSource = dt;
+                    proDataGrid.DataBind();
+                    adapter.Dispose();
+                    cmd.Dispose();
+                    con.Close();
+
+                    lblInfo.Text = "Added Successfully";
+                    txtempdes.Text = "";
+                    txtempName.Text = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                lblInfo.Text = "Error:" + ex.Message.ToString();
+            }
+        }
+
+        public void FillGrid()
+        {
+            try
+            {
+
+                con.Open();
+                SqlDataAdapter adapter = new SqlDataAdapter(new SqlCommand("Select EMP_Name,EMP_Desc from EMP_DB", con)); ///
+                DataTable dt = new DataTable();
+                adapter.Fill(dt);
+                proDataGrid.DataSource = dt;
+                proDataGrid.DataBind();
+                adapter.Dispose();
+                con.Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+    }
+}
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+HTML CODDING PART
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="WebForm1.aspx.cs" Inherits="employeetable.WebForm1" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+</head>
+<body>
+   <form id="form1" runat="server">
+<div style="padding:5px;">
+<h2>Add  Employee Data using SQL DB Procedure</h2>
+<table class="table table-condensed" style="width:500px;">
+<tr>
+<td>
+Employee Name:
+</td>
+<td>
+    <asp:TextBox ID="txtempName" runat="server"></asp:TextBox>
+</td>
+</tr>
+<tr>
+<td>
+Employee Designation:
+</td>
+<td>
+    <asp:TextBox ID="txtempdes" runat="server"></asp:TextBox>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="left">
+    <asp:Button ID="btnsubmit" runat="server" Text="Submit" OnClick="btnsubmit_Click" />
+</td>
+</tr>
+</table>
+<asp:Label runat="server" ID="lblInfo" />
+
+<br /><br />
+
+       <asp:GridView ID="GridView1" runat="server" CssClass="table table-condensed"/>
+       
+</div>
+</form>
+</body>
+</html>
